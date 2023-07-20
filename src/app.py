@@ -1,3 +1,5 @@
+# ___________________CredentialsAndConnectingToGoogleSheets_____________________________________________________
+
 from __future__ import print_function
 
 import os.path
@@ -254,7 +256,7 @@ app.layout=html.Div([
     html.H3(id="fill-value2"),
     
     html.H3("Select parameters for visualization"),
-    dcc.Dropdown(options=['Order Delayed Status','Blame Department','Create Order-Barcode no.',
+    dcc.Dropdown(options=['Order Delayed Status','Blame Department','Create Order-Barcode no.',"Create Order-Pretture no.",
                          "Create Order-Department"],value=['Order Delayed Status',"Create Order-Brand"],id="input-2",multi=True),
     dcc.Graph(id="graph-1"),
     
