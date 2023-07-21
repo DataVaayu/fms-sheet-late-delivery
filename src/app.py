@@ -289,7 +289,7 @@ def update_graph(value1,value2):
     # making the sunburst plot for category delay and filling empty values 
     sunburst = df_for_processing_orders.replace("","no data")    
     fig = px.sunburst(sunburst,path=value2,height=700,width=1000,color_discrete_sequence=["brown","purple"])
-    fig.update_traces(textinfo="label+value+percent root")
+    fig.update_traces(textinfo="label+value+percent parent")
     
     return dist_orders_delayed,dist_orders_delayed2,fig
 
