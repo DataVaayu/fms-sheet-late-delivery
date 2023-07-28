@@ -259,6 +259,8 @@ app.layout=html.Div([
     dcc.Dropdown(options=['Order Delayed Status','Blame Department','Create Order-Barcode no.',"Create Order-Pretture no.",
                          "Create Order-Department"],value=['Order Delayed Status'],id="input-2",multi=True),
     dcc.Graph(id="graph-1"),
+
+    dash_table.DataTable([{"data":i,"id":i} for i in df_for_processing.columns],page_size=10,id="late-table")
     
 ])
 
@@ -267,6 +269,7 @@ app.layout=html.Div([
     Output("fill-value","children"),
     Output("fill-value2","children"),
     Output("graph-1","figure"),
+    Output("late-table","children"),
     Input("input-1","value"),
     Input("input-2","value"),
 )
@@ -290,6 +293,9 @@ def update_graph(value1,value2):
     sunburst = df_for_processing_orders.replace("","no data")    
     fig = px.sunburst(sunburst,path=value2,height=700,width=1000,color_discrete_sequence=["brown","purple"])
     fig.update_traces(textinfo="label+value+percent parent")
+
+    # the dataframe for late table visualization
+    df_for_processing2=df_for_processing[["","","","","",""]]
     
     return dist_orders_delayed,dist_orders_delayed2,fig
 
