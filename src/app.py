@@ -10,6 +10,8 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 import pandas as pd
+from datetime import datetime as dt
+from datetime import timedelta
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
@@ -167,7 +169,7 @@ df.columns = index_tuple_cols
 
 # save the dataframe into a dataframe
 
-df_for_processing.to_csv("D:\All Data\desktop\Master Sheet Reports\LateDelivery From FMS - Dash Report\src\O2D FMS - Blame Department.csv")
+# df_for_processing.to_csv("D:\All Data\desktop\Master Sheet Reports\LateDelivery From FMS - Dash Report\src\O2D FMS - Blame Department.csv")
 
 # creating one level of columns from a multi level column index
 
@@ -229,7 +231,20 @@ df_for_processing["Blame Department"]=df_for_processing["Column Stuck In"].apply
 df_for_processing.fillna("no information",inplace=True)
 
 #saving the column to csv
-df_for_processing.to_csv(r"D:\All Data\desktop\Master Sheet Reports\O2D FMS - Blame Department.csv")
+# df_for_processing.to_csv(r"D:\All Data\desktop\Master Sheet Reports\O2D FMS - Blame Department.csv")
+
+# Changing the datetime format for Create Order-DOD ( Client )
+df_for_processing["Create Order-DOD ( Client )"]=pd.to_datetime(df_for_processing["Create Order-DOD ( Client )"])
+df_for_processing["Create Order-DOD ( Client )"]=df_for_processing["Create Order-DOD ( Client )"].dt.date
+df_for_processing["Create Order-DOD ( Client )"]=df_for_processing["Create Order-DOD ( Client )"].astype(str)
+print(df_for_processing["Create Order-DOD ( Client )"])
+
+# Creating a date time column for the datepicker range
+
+df_for_processing["Date_time"] = pd.to_datetime(df_for_processing["Timestamp-Timestamp"])
+df_for_processing["Date_time"]=df_for_processing["Date_time"].dt.date
+df_for_processing.set_index("Date_time",inplace=True)
+#print(df_for_processing.index)
 
 # ___________________________________DashAPP_____________________________________________________________
 
@@ -243,15 +258,44 @@ import plotly.graph_objects as go
 import dash_bootstrap_components as dbc
 
 
+
 app = Dash(__name__)
 server = app.server
 
 app.layout=html.Div([
     
     html.H1("Late Delivery Report"),
-    html.H3("Select dates for Date of Delivery Client"),
-    dcc.Dropdown(options=df_for_processing['Create Order-DOD ( Client )'].unique(),value=["10/07/2023","11/07/2023"],id="input-1",multi=True),
+
+    #html.H3("Select dates for Date of Delivery Client"),
+    #dcc.Dropdown(options=df_for_processing['Create Order-DOD ( Client )'].unique(),value=["10/07/2023","11/07/2023"],id="input-1",multi=True),
+
+    # Range for Date of Delivery Client\
+
+    html.H3("Select Date Range for Date of Delivery of Client"),
+    #Creating a datepicker range in the layout
+    dcc.DatePickerRange(
+        id="date-picker-range",
+        calendar_orientation="horizontal",
+        day_size=39,
+        end_date_placeholder_text="Return",
+        first_day_of_week=1,
+        reopen_calendar_on_clear=True,
+        clearable=True,
+        number_of_months_shown=1,
+        min_date_allowed=dt(2023, 6, 19),
+        initial_visible_month=dt(2023, 7, 1),
+        display_format='MMM Do, YY',
+        month_format='MMMM, YYYY',
+        minimum_nights=1,
+        updatemode='singledate',
+        start_date='2023-07-24',
+        end_date="2023-07-29",
         
+    ),
+
+    # Listing the dates that are in the dates list selected from the DatePickerRange
+    #html.H3(id="dates-between-start-end-dates"),
+
     html.H3(id="fill-value"),
     html.H3(id="fill-value2"),
     
@@ -260,7 +304,7 @@ app.layout=html.Div([
                          "Create Order-Department"],value=['Order Delayed Status'],id="input-2",multi=True),
     dcc.Graph(id="graph-1"),
 
-    dash_table.DataTable([{"data":i,"id":i} for i in df_for_processing.columns],page_size=10,id="late-table")
+    dash_table.DataTable([{"data":i,"id":i} for i in df_for_processing[["Create Order-Pretture no.","Create Order-Barcode no.","Create Order-Customer Name","Create Order-Department","Create Order-DOD ( Client )","Create Order-Design no."]].columns],page_size=10,id="late-table")
     
 ])
 
@@ -269,16 +313,39 @@ app.layout=html.Div([
     Output("fill-value","children"),
     Output("fill-value2","children"),
     Output("graph-1","figure"),
-    Output("late-table","children"),
-    Input("input-1","value"),
+    Output("late-table","data"),
+    #Output("dates-between-start-end-dates","children"),
+    #Input("input-1","value"),
     Input("input-2","value"),
+    Input("date-picker-range","start_date"),
+    Input("date-picker-range","end_date"),
 )
 
-def update_graph(value1,value2):
+def update_graph(value2,start_date, end_date):
+
+    # create the date range with all dates from the DatePickerRange start and end dates
+    print(start_date,end_date)
+    start_date = pd.to_datetime(start_date)
+    end_date = pd.to_datetime(end_date)
+
+    dates_list=[]
+
+    while start_date<=end_date:
+        dates_list.append(start_date.strftime("%Y-%m-%d"))
+        start_date +=timedelta(days=1)
+    print(dates_list)
+
+
     # calculate the number of orders for input dates
     
-    df_for_processing_orders=df_for_processing[df_for_processing['Create Order-DOD ( Client )'].isin(value1)]
-    number_of_orders = df_for_processing_orders.shape[0]
+    df_for_processing_orders=df_for_processing[df_for_processing['Create Order-DOD ( Client )'].isin(dates_list)]
+    
+    # Filtering out the dataframe from the start and end dates
+    #df_for_processing_orders=df_for_processing.loc[start_date:end_date]
+
+    # Calculation of number of orders
+
+    number_of_orders = df_for_processing_orders.shape[0]-2
     
     # calculate the number of orders delayed
     df_for_processing_orders_delayed = df_for_processing_orders[df_for_processing_orders["Order Delayed Status"]=="Order Delayed"]
@@ -295,10 +362,10 @@ def update_graph(value1,value2):
     fig.update_traces(textinfo="label+value+percent parent")
 
     # the dataframe for late table visualization
-    df_for_processing2=df_for_processing[["","","","","",""]]
+    df_for_processing2=df_for_processing_orders_delayed[["Create Order-Pretture no.","Create Order-Barcode no.","Create Order-Customer Name","Create Order-Department","Create Order-DOD ( Client )","Create Order-Design no."]]
     
-    return dist_orders_delayed,dist_orders_delayed2,fig
+    return dist_orders_delayed,dist_orders_delayed2,fig,df_for_processing2.to_dict("records")
 
 if __name__=="__main__":
-    app.run(debug=True)
+    app.run(debug=True,port=8051)
     
