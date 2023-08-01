@@ -304,7 +304,7 @@ app.layout=html.Div([
                          "Create Order-Department"],value=['Order Delayed Status'],id="input-2",multi=True),
     dcc.Graph(id="graph-1"),
 
-    dash_table.DataTable([{"data":i,"id":i} for i in df_for_processing[["Create Order-Pretture no.","Create Order-Barcode no.","Create Order-Customer Name","Create Order-Department","Create Order-DOD ( Client )","Create Order-Design no."]].columns],page_size=10,id="late-table")
+    dash_table.DataTable([{"data":i,"id":i} for i in df_for_processing[["Create Order-Pretture no.","Create Order-Barcode no.","Create Order-Customer Name","Create Order-Department","Create Order-DOD ( Client )","Create Order-Design no.","Blame Department"]].columns],page_size=10,id="late-table")
     
 ])
 
@@ -362,7 +362,7 @@ def update_graph(value2,start_date, end_date):
     fig.update_traces(textinfo="label+value+percent parent")
 
     # the dataframe for late table visualization
-    df_for_processing2=df_for_processing_orders_delayed[["Create Order-Pretture no.","Create Order-Barcode no.","Create Order-Customer Name","Create Order-Department","Create Order-DOD ( Client )","Create Order-Design no."]]
+    df_for_processing2=df_for_processing_orders_delayed[["Create Order-Pretture no.","Create Order-Barcode no.","Create Order-Customer Name","Create Order-Department","Create Order-DOD ( Client )","Create Order-Design no.","Blame Department"]]
     
     return dist_orders_delayed,dist_orders_delayed2,fig,df_for_processing2.to_dict("records")
 
