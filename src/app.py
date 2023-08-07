@@ -234,16 +234,39 @@ df_for_processing.fillna("no information",inplace=True)
 # df_for_processing.to_csv(r"D:\All Data\desktop\Master Sheet Reports\O2D FMS - Blame Department.csv")
 
 # Changing the datetime format for Create Order-DOD ( Client )
-df_for_processing["Create Order-DOD ( Client )"]=pd.to_datetime(df_for_processing["Create Order-DOD ( Client )"])
-df_for_processing["Create Order-DOD ( Client )"]=df_for_processing["Create Order-DOD ( Client )"].dt.date
+#df_for_processing["Create Order-DOD ( Client )"]=pd.to_datetime(df_for_processing["Create Order-DOD ( Client )"])
+#df_for_processing["Create Order-DOD ( Client )"]=df_for_processing["Create Order-DOD ( Client )"].dt.date
+#df_for_processing["Create Order-DOD ( Client )"]=df_for_processing["Create Order-DOD ( Client )"].astype(str)
+
+
+# preprocessing the data of delivery clients by string and creating a new date column
+# splitting the old column dates
 df_for_processing["Create Order-DOD ( Client )"]=df_for_processing["Create Order-DOD ( Client )"].astype(str)
-print(df_for_processing["Create Order-DOD ( Client )"])
+#print(df_for_processing["Create Order-DOD ( Client )"])
+
+for index,row in df_for_processing.iterrows():
+    try:
+        df_for_processing.loc[index,"Date_Day"]=row["Create Order-DOD ( Client )"].split("/")[0]
+        df_for_processing.loc[index,"Date_Month"]=row["Create Order-DOD ( Client )"].split("/")[1]
+        df_for_processing.loc[index,"Date_Year"]=row["Create Order-DOD ( Client )"].split("/")[2]
+    except:
+        try:
+            df_for_processing.loc[index,"Date_Day"]=row["Create Order-DOD ( Client )"].split("-")[0]
+            df_for_processing.loc[index,"Date_Month"]=row["Create Order-DOD ( Client )"].split("-")[1]
+            df_for_processing.loc[index,"Date_Year"]=row["Create Order-DOD ( Client )"].split("-")[2]
+        except:
+            print(row["Create Order-DOD ( Client )"])
+
+# creating a new dod client column
+for index,row in df_for_processing.iterrows():
+    df_for_processing.loc[index,"Create Order-DOD ( Client )_2"]="-".join([str(row["Date_Year"]),str(row["Date_Month"]),str(row["Date_Day"])])
+
 
 # Creating a date time column for the datepicker range
 
-df_for_processing["Date_time"] = pd.to_datetime(df_for_processing["Timestamp-Timestamp"])
-df_for_processing["Date_time"]=df_for_processing["Date_time"].dt.date
-df_for_processing.set_index("Date_time",inplace=True)
+#df_for_processing["Date_time"] = pd.to_datetime(df_for_processing["Timestamp-Timestamp"])
+#df_for_processing["Date_time"]=df_for_processing["Date_time"].dt.date
+#df_for_processing.set_index("Date_time",inplace=True)
 #print(df_for_processing.index)
 
 # ___________________________________DashAPP_____________________________________________________________
@@ -289,8 +312,8 @@ app.layout=html.Div([
         month_format='MMMM, YYYY',
         minimum_nights=1,
         updatemode='singledate',
-        start_date='2023-07-24',
-        end_date="2023-07-29",
+        start_date='2023-07-31',
+        end_date="2023-08-05",
         
     ),
 
@@ -340,15 +363,15 @@ def update_graph(value2,start_date, end_date):
 
 
     # calculate the number of orders for input dates
-    
-    df_for_processing_orders=df_for_processing[df_for_processing['Create Order-DOD ( Client )'].isin(dates_list)]
+    #print(f"column dates: {df_for_processing['Create Order-DOD ( Client )'][df_for_processing['Create Order-DOD ( Client )'].isin(dates_list)]}")
+    df_for_processing_orders=df_for_processing[df_for_processing['Create Order-DOD ( Client )_2'].isin(dates_list)]
     
     # Filtering out the dataframe from the start and end dates
     #df_for_processing_orders=df_for_processing.loc[start_date:end_date]
 
     # Calculation of number of orders
 
-    number_of_orders = df_for_processing_orders.shape[0]-2
+    number_of_orders = df_for_processing_orders.shape[0]
     
     # calculate the number of orders delayed
     df_for_processing_orders_delayed = df_for_processing_orders[df_for_processing_orders["Order Delayed Status"]=="Order Delayed"]
