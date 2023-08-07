@@ -264,7 +264,8 @@ server = app.server
 
 app.layout=html.Div([
     
-    html.H1("Late Delivery Report"),
+    html.H1("LATE DELIVERY REPORT",style={"text-align":"center","background-color":"rgb(207,239,249)"}),
+    html.Br(),    
 
     #html.H3("Select dates for Date of Delivery Client"),
     #dcc.Dropdown(options=df_for_processing['Create Order-DOD ( Client )'].unique(),value=["10/07/2023","11/07/2023"],id="input-1",multi=True),
@@ -292,6 +293,8 @@ app.layout=html.Div([
         end_date="2023-07-29",
         
     ),
+
+    html.Br(),
 
     # Listing the dates that are in the dates list selected from the DatePickerRange
     #html.H3(id="dates-between-start-end-dates"),
@@ -367,5 +370,5 @@ def update_graph(value2,start_date, end_date):
     return dist_orders_delayed,dist_orders_delayed2,fig,df_for_processing2.to_dict("records")
 
 if __name__=="__main__":
-    app.run(debug=True,port=8051)
+    app.run(debug=True,port=8033)
     
