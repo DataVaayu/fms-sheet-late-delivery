@@ -202,23 +202,27 @@ for index,row in df_for_processing.iterrows():
 
 df_for_processing["Column Stuck In"]=""
 
+
+
+# find the list of columns that have the Time Delay word in it
+time_delay_col = [i for i in df_for_processing.columns if "Delay" in i]
+        
+# Remove columns that can never be in a delay
+# First creating a list of non-dely columns
+non_delay_columns = ["Stock Availability in Pretture-Time Delay",
+                             "Stock Availability in PRO(production)-Time Delay",
+                             "Raise PRO(production) if not available anywhere-Time Delay",
+                             "Alteration needed?-Time Delay"]
+        
+# modifying the time delay column after removing the non delay column
+time_delay_col=[i for i in time_delay_col if i not in non_delay_columns]
+
 # iterate through the dataframe and fill the Department Stuck In column
 
 for index, row in df_for_processing.iterrows():
     if (df_for_processing.loc[index,'Received pcs in Warehouse 2-Time Delay']=="") | ("-" not in df_for_processing.loc[index,'Received pcs in Warehouse 2-Time Delay']):
         
-        # find the list of columns that have the Time Delay word in it
-        time_delay_col = [i for i in df.columns if "Delay" in i]
-        
-        # Remove columns that can never be in a delay
-        non_delay_columns = ["Stock Availability in Pretture-Time Delay",
-                             "Stock Availability in PRO(production)-Time Delay",
-                             "Raise PRO(production) if not available anywhere-Time Delay",
-                             "Alteration needed?-Time Delay"]
-        
-        # modifying the time delay column after removing the non delay column
-        time_delay_col=[i for i in time_delay_col if i not in non_delay_columns]
-        
+              
         for i in time_delay_col:
             if df_for_processing.loc[index,i]!="":
                 df_for_processing.loc[index,"Column Stuck In"]=i
@@ -229,14 +233,6 @@ for index, row in df_for_processing.iterrows():
 df_for_processing["Blame Department"]=df_for_processing["Column Stuck In"].apply(lambda x: x.split("-")[0])
 
 df_for_processing.fillna("no information",inplace=True)
-
-#saving the column to csv
-# df_for_processing.to_csv(r"D:\All Data\desktop\Master Sheet Reports\O2D FMS - Blame Department.csv")
-
-# Changing the datetime format for Create Order-DOD ( Client )
-#df_for_processing["Create Order-DOD ( Client )"]=pd.to_datetime(df_for_processing["Create Order-DOD ( Client )"])
-#df_for_processing["Create Order-DOD ( Client )"]=df_for_processing["Create Order-DOD ( Client )"].dt.date
-#df_for_processing["Create Order-DOD ( Client )"]=df_for_processing["Create Order-DOD ( Client )"].astype(str)
 
 
 # preprocessing the data of delivery clients by string and creating a new date column
@@ -257,29 +253,18 @@ for index,row in df_for_processing.iterrows():
         except:
             print(row["Create Order-DOD ( Client )"])
 
-# creating a new dod client column
+# creating a new dod client date column
 for index,row in df_for_processing.iterrows():
     df_for_processing.loc[index,"Create Order-DOD ( Client )_2"]="-".join([str(row["Date_Year"]),str(row["Date_Month"]),str(row["Date_Day"])])
-
-
-# Creating a date time column for the datepicker range
-
-#df_for_processing["Date_time"] = pd.to_datetime(df_for_processing["Timestamp-Timestamp"])
-#df_for_processing["Date_time"]=df_for_processing["Date_time"].dt.date
-#df_for_processing.set_index("Date_time",inplace=True)
-#print(df_for_processing.index)
 
 # ___________________________________DashAPP_____________________________________________________________
 
 # Creating the Dash app
 
 from dash import Dash, dcc, Input, Output, callback, html,dash_table
-import dash_cool_components
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
 import dash_bootstrap_components as dbc
-
 
 
 app = Dash(__name__)
@@ -293,7 +278,7 @@ app.layout=html.Div([
     #html.H3("Select dates for Date of Delivery Client"),
     #dcc.Dropdown(options=df_for_processing['Create Order-DOD ( Client )'].unique(),value=["10/07/2023","11/07/2023"],id="input-1",multi=True),
 
-    # Range for Date of Delivery Client\
+    # Range for Date of Delivery Client
 
     html.H3("Select Date Range for Date of Delivery of Client"),
     #Creating a datepicker range in the layout
@@ -350,7 +335,7 @@ app.layout=html.Div([
 def update_graph(value2,start_date, end_date):
 
     # create the date range with all dates from the DatePickerRange start and end dates
-    print(start_date,end_date)
+    #print(start_date,end_date)
     start_date = pd.to_datetime(start_date)
     end_date = pd.to_datetime(end_date)
 
@@ -359,7 +344,7 @@ def update_graph(value2,start_date, end_date):
     while start_date<=end_date:
         dates_list.append(start_date.strftime("%Y-%m-%d"))
         start_date +=timedelta(days=1)
-    print(dates_list)
+    #print(dates_list)
 
 
     # calculate the number of orders for input dates
